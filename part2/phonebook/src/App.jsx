@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Persons from './components/Persons'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
+import Notification from './components/Notification'
 import { getAll, create, update, del } from './services/phoneBook'
 
 const App = () => {
@@ -9,6 +10,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [searchName, setSearchName] = useState([]);
+  const [message, setMessage] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   
 
   useEffect(() => {
@@ -25,7 +28,7 @@ const App = () => {
     }
     
     const nameExists = personInfo.some(person => person.name === contacts.name)
-    console.log('nameExists', nameExists)
+    // console.log('nameExists', nameExists)
     const person = personInfo.find(p => p.name === contacts.name)
     // console.log(person)
     
@@ -34,6 +37,10 @@ const App = () => {
       create(contacts)
         .then(returnedObject => {
           setPersonInfo(personInfo.concat(returnedObject))
+          setMessage(`Added "${contacts.name}`)
+          setTimeout(() => {
+            setMessage('')
+          }, 5000)
         })
     } else if (nameExists) {
         const windowsForCondition = window.confirm(`${newName} is already added to phonebook, replace the old number with new one?`)
@@ -43,6 +50,18 @@ const App = () => {
           update(person.id, updatedPersonInfo)
             .then(returnedObject => {
               setPersonInfo(personInfo.map(p => p.id === person.id ? returnedObject : p))
+              setMessage(`Updated "${contacts.name}" with new phone number: ${newPhone}`)
+              setTimeout(() => {
+                setMessage('')
+              }, 5000)
+            })
+            .catch(error => {
+              console.error(error)
+              setErrorMsg(`Information of ${person.name} has already been removed from server`)
+              setPersonInfo(personInfo.filter(p => p.id !== person.id))
+              setTimeout(() => {
+                setErrorMsg('')
+              }, 5000)
             })
         }
     }
@@ -69,7 +88,7 @@ const App = () => {
 
   const handleDelete = (id, name) => {
       if (window.confirm(`Delete ${name}`)) {
-        del(id).then(
+        del(id).then( () => 
           setPersonInfo(personInfo.filter(p => p.id !== id))
         )
       }
@@ -80,6 +99,7 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter handleFilter={handleFilter}/>
       <h2>add a new</h2>
+      <Notification message={message} errorMsg={errorMsg}/>
       <PersonForm 
         handleSubmit={handleSubmit}
         newName={newName}
