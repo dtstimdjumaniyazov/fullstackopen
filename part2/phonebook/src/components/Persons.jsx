@@ -1,7 +1,14 @@
-function Persons({persons}) {
-    const name = persons.map((person) => {
+import { del } from "../services/phoneBook"
+
+function Persons({ personInfo, handleDelete }) {
+    const name = personInfo.map((person) => {
         return (
-            <p key={person.id}>{person.name} {person.newPhone}</p>
+            <div key={person.id}>
+                <p>
+                    {person.name} {person.newPhone}
+                    <button onClick={() => handleDelete(person.id, person.name)}>delete</button>
+                </p>
+            </div>
         )
     })
     return (
