@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react"
 import { getAll } from "./services/restcountries"
+import { getWeather } from "./services/weather"
+import ShowCountryComponent from "./components/showCountryComponent"
 
 function App() {
   const [country, setCountry] = useState('')
   const [allCountries, setAllCountries] = useState([])
   const [showCountry, setShowCountry] = useState([])
+  const [weatherInfo, setWeatherInfo] = useState({})
 
-
-  
   useEffect(() => {
     getAll().then(values => {
       // console.log('Values: ', values)
@@ -39,10 +40,20 @@ function App() {
     
     console.log('Matched countries array', matchCountry)
     setShowCountry(matchCountry)
+
+    if (matchCountry.length === 1) {
+      getWeather(matchCountry[0].capitalName[0])
+        .then(data => setWeatherInfo(data))
+    }
     
   }, [country])
 
   console.log('Show country', showCountry)
+  console.log('Weather Info variable ', weatherInfo)
+
+  const handleShow = (countryName) => {
+    setCountry(countryName)
+  }
 
   return (
     <>
@@ -56,7 +67,10 @@ function App() {
             <div>
               {showCountry.map(c => (
                 <p key={c.commonName}>
-                  {c.commonName}
+                  {c.commonName} 
+                  <button onClick={() => handleShow(c.commonName)}>
+                    Show
+                  </button>
                 </p>
               ))}
             </div>
@@ -75,11 +89,21 @@ function App() {
                     </ul>
                   ))}
                   <img src={c?.flagsImage} alt={c?.flagsAlt} />
+                <h1>Weather in {c.capitalName}</h1>
+                <p>Temperature {weatherInfo.main.temp} Celsius</p>
+                {weatherInfo?.weather && (
+                  <img 
+                    src={`https://openweathermap.org/img/wn/${weatherInfo.weather[0].icon}@2x.png`}
+                    alt="weather icon"
+                  />
+                )}
+                <p>Wind {weatherInfo.wind.speed} m/s</p>
                 </div>
               ))}
             </div>
           )}
         </div>
+        {/* <ShowCountryComponent showCountry={showCountry}/> */}
       </div>
     </>
   )
