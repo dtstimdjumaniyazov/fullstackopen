@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react"
 import { getAll } from "./services/restcountries"
 import { getWeather } from "./services/weather"
-import ShowCountryComponent from "./components/showCountryComponent"
+import CountryList from "./components/CountryList"
+import CountryDetails from "./components/CountryDetails"
+import Weather from "./components/Weather"
 
 function App() {
   const [country, setCountry] = useState('')
   const [allCountries, setAllCountries] = useState([])
   const [showCountry, setShowCountry] = useState([])
   const [weatherInfo, setWeatherInfo] = useState({})
+
+  // console.log(getWeather('London'))
 
   useEffect(() => {
     getAll().then(values => {
@@ -22,7 +26,7 @@ function App() {
           flagsAlt: v.flags.alt
         }
       ))
-      console.log('country Details: ', countryName)
+      // console.log('country Details: ', countryName)
       setAllCountries(countryName)
     })
   }, [])
@@ -38,7 +42,7 @@ function App() {
     
     const matchCountry = allCountries?.filter(c => c.commonName.toLowerCase().includes(country.toLowerCase()))
     
-    console.log('Matched countries array', matchCountry)
+    // console.log('Matched countries array', matchCountry)
     setShowCountry(matchCountry)
 
     if (matchCountry.length === 1) {
@@ -48,8 +52,8 @@ function App() {
     
   }, [country])
 
-  console.log('Show country', showCountry)
-  console.log('Weather Info variable ', weatherInfo)
+  // console.log('Show country', showCountry)
+  // console.log('Weather Info variable ', weatherInfo)
 
   const handleShow = (countryName) => {
     setCountry(countryName)
@@ -58,52 +62,23 @@ function App() {
   return (
     <>
       <div>
-        find countries <input onChange={handleInput}/>
+        find countries <input onChange={handleInput} autoFocus/>
         <div>
           {showCountry.length > 10 && (
             <p>Too many matches, specify another filter</p>
           )}
           {showCountry.length < 11 && showCountry.length > 1 && (
             <div>
-              {showCountry.map(c => (
-                <p key={c.commonName}>
-                  {c.commonName} 
-                  <button onClick={() => handleShow(c.commonName)}>
-                    Show
-                  </button>
-                </p>
-              ))}
+              <CountryList arr={showCountry} handleShow={handleShow}/>
             </div>
           )}
           {showCountry.length === 1 && (
             <div>
-              {showCountry.map(c => (
-                <div key={c?.commonName}>
-                  <h1>{c?.commonName}</h1>
-                  <p>Capital: {c?.capitalName}</p>
-                  <p>Area: {c?.areaInfo}</p>
-                  <h2>Languages</h2>
-                  {Object.values(c.languagesInfo)?.map(lang => (
-                    <ul key={lang}>
-                      <li>{lang}</li>
-                    </ul>
-                  ))}
-                  <img src={c?.flagsImage} alt={c?.flagsAlt} />
-                <h1>Weather in {c.capitalName}</h1>
-                <p>Temperature {weatherInfo.main.temp} Celsius</p>
-                {weatherInfo?.weather && (
-                  <img 
-                    src={`https://openweathermap.org/img/wn/${weatherInfo.weather[0].icon}@2x.png`}
-                    alt="weather icon"
-                  />
-                )}
-                <p>Wind {weatherInfo.wind.speed} m/s</p>
-                </div>
-              ))}
+              <CountryDetails arr={showCountry} />
+              <Weather arr={showCountry} weatherInfo={weatherInfo}/>
             </div>
           )}
         </div>
-        {/* <ShowCountryComponent showCountry={showCountry}/> */}
       </div>
     </>
   )
