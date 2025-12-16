@@ -24,15 +24,24 @@ let notes = [
   }
 ]
 
-app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
-})
+// app.get('/', (request, response) => {
+//   response.send('<h1>Hello World!</h1>')
+// })
 
 app.get('/api/notes', (request, response) => {
   response.json(notes)
 })
 
-app.get('/api/notes/:id')
+app.get('/api/notes/:id', (request, response) => {
+  const id = request.params.id
+  const note = notes.find(n => n.id === id)
+  
+  if (note) {
+    response.json(note)
+  } else {
+    response.status(404).end()
+  }
+})
 
 const generateId = () => {
   const maxId = notes.length > 0
@@ -59,6 +68,27 @@ app.post('/api/notes', (request, response) => {
   notes = notes.concat(note)
 
   response.json(note)
+})
+
+app.put('/api/notes/:id', (request, response) => {
+  const id = request.params.id
+  const body = request.body
+
+  const note = notes.find(n => n.id === id)
+  
+  if (!note) {
+    return response.status(404).json({
+      error: 'note not found'
+    })
+  }
+
+  const updatedNote = {
+    ...note,
+    important: body.important
+  }
+
+  notes = notes.map(n => n.id === id ? updatedNote : n)
+  response.json(updatedNote)
 })
 
 const PORT = process.env.PORT || 3001
