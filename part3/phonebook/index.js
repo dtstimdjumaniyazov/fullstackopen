@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
+const cors = require('cors')
 
 let persons = [
     { 
@@ -55,6 +56,7 @@ app.use(express.json())
 app.use(requestTime)
 app.use(morgan('tiny'))
 app.use(loggerDetails)
+app.use(cors())
 
 
 app.get('/api/persons', (request, response) => {
