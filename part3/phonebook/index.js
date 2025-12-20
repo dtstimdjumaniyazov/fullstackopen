@@ -57,6 +57,7 @@ app.use(requestTime)
 app.use(morgan('tiny'))
 app.use(loggerDetails)
 app.use(cors())
+app.use(express.static('dist'))
 
 
 app.get('/api/persons', (request, response) => {
@@ -132,7 +133,7 @@ app.post('/api/persons', (request, response) => {
 })
 
 
-const PORT = 3001 || process.env.PORT
+const PORT = process.env.PORT || 3001 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })
