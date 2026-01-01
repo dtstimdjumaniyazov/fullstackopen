@@ -53,6 +53,16 @@ const loggerDetails = morgan(function (tokens, req, res) {
     ].join(' ')
 })
 
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({error: 'malformatted id'})
+    }
+
+    next(error)
+}
+
 
 app.use(express.json())
 app.use(requestTime)
@@ -68,15 +78,16 @@ app.get('/api/persons', (request, response) => {
     })
 })
 
-
-app.get('/info', (request, response) => {
-    let responseText = `Phonebook has info for  ${persons.length} people`
-    responseText += `<p>${request.requestTime}</p>`
-    
-    response.send(responseText)
+app.get('/info', (request, response, next) => {
+    PhoneBook.countDocuments({})
+        .then(results => {
+            // console.log(results)
+            response.send(`<p>${`Phonebook has info for  ${results} people`}</p>`)
+        })
+        .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     // const id = request.params.id
     // const person = persons.find((person) => person.id === id)
     // if (person) {
@@ -86,12 +97,19 @@ app.get('/api/persons/:id', (request, response) => {
     //         error: `no such person with ${id}`
     //     })
     // }  
-    PhoneBook.findById(request.params.id).then(result => {
-        response.json(result)
-    })
+    PhoneBook.findById(request.params.id)
+        .then(result => {
+            if (result) {
+                response.json(result)
+            }
+            if (!result) {
+                return response.status(404).end()
+            }
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
     // const id = request.params.id
     // const personExists = persons.find((person) => person.id === id)
     
@@ -103,12 +121,14 @@ app.delete('/api/persons/:id', (request, response) => {
 
     // persons = persons.filter((person) => person.id !== id)
     // response.status(204).end()
-    PhoneBook.deleteOne({_id: request.params.id}).then(result => {
-        response.json(result)
-    })
+    PhoneBook.findByIdAndDelete(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
     // personName = persons.find((person) => person.name === body.name)
     // // console.log(personName)
@@ -145,15 +165,48 @@ app.post('/api/persons', (request, response) => {
             error: 'name or number is missing'
         })
     }
-    const phonebook = new PhoneBook({
-        name: body.name,
-        number: body.number
-    })
-    phonebook.save().then(result => {
-        response.json(result)
+
+    PhoneBook.findOne({name: body.name}).then(existing => {
+        if (existing) {
+            existing.number = body.number
+
+            return existing.save()
+                .then(updated => {
+                    response.json(updated)
+                })
+                .catch(error => next(error))
+        } else {
+            const phonebook = new PhoneBook({
+                name: body.name,
+                number: body.number
+            })
+            phonebook.save().then(result => {
+                response.json(result)
+            })
+        }
     })
 })
 
+app.put('/api/persons/:id', (request, response, next) => {
+    const {name, number} = request.body
+
+    PhoneBook.findById(request.params.id)
+        .then(updated => {
+            if(!updated) {
+                return response.status(404).end()
+            }
+
+            updated.name = name
+            updated.number = number
+
+            return updated.save().then(updatedPhone => {
+                response.json(updatedPhone)
+            })
+            .catch(error => next(error))
+        })
+})
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
