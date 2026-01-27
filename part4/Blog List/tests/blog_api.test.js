@@ -93,6 +93,45 @@ test('a blog without title or url is not added', async () => {
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
 })
 
+// Ex 4.13.
+test('delete a single blog post resource', async () => {
+    const blogAtStart = await helper.blogsInDb()
+    const blogToDelete = blogAtStart[0]
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    const ids = blogsAtEnd.map(b => b.id)
+    assert(!ids.includes(blogToDelete.id))
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
+})
+
+// Ex 4.14
+test('update the number of likes for blog post', async () => {
+    const newBlog = {
+        title: 'Test Blog 1',
+        author: 'Test Author 1',
+        url: 'https://example1.com',
+        likes: 33333333
+    }
+    
+    const allBlogs = await helper.blogsInDb()
+    const blogToUpdate = allBlogs[0]
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const allBlogsAgain = await helper.blogsInDb()
+    
+    const likes = allBlogsAgain.map(b => b.likes)
+    assert(likes.includes(newBlog.likes))
+})
+
 after(async () => {
     await mongoose.connection.close()
 })
