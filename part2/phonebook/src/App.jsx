@@ -24,7 +24,7 @@ const App = () => {
     event.preventDefault();
     const contacts = {
       name: newName,
-      newPhone: newPhone,
+      number: newPhone,
     }
     
     const nameExists = personInfo.some(person => person.name === contacts.name)
@@ -42,10 +42,16 @@ const App = () => {
             setMessage('')
           }, 5000)
         })
+        .catch(error => {
+          setErrorMsg(error.response.data.error)
+          setTimeout(() => {
+            setErrorMsg('')
+          }, 5000)  
+        })
     } else if (nameExists) {
         const windowsForCondition = window.confirm(`${newName} is already added to phonebook, replace the old number with new one?`)
         if (windowsForCondition) {
-          const updatedPersonInfo = { ...person,  newPhone: newPhone}
+          const updatedPersonInfo = { ...person,  number: newPhone}
           
           update(person.id, updatedPersonInfo)
             .then(returnedObject => {
