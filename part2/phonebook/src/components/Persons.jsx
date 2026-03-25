@@ -1,11 +1,11 @@
 import { del } from "../services/phoneBook"
 
 function Persons({ personInfo, handleDelete }) {
-    const name = personInfo.map((person) => {
+    const name = personInfo?.map((person) => {
         return (
-            <div key={person.id}>
+            <div key={person?.id}>
                 <p>
-                    {person.name} {person.newPhone}
+                    {person?.name} {person?.number}
                     <button onClick={() => handleDelete(person.id, person.name)}>delete</button>
                 </p>
             </div>
