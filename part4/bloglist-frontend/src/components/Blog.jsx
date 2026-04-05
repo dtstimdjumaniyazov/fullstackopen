@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
-const Blog = ({ blog, addLike, remove }) => {
+const Blog = ({ blog, addLike, remove, user }) => {
   const [visible, setVisible] = useState(false)
-
+  
   return (
     <div className="blog">
       <span className="blog-title-author">
@@ -19,7 +19,9 @@ const Blog = ({ blog, addLike, remove }) => {
             <button onClick={addLike}>like</button>
           </p>
           <p>Added by: {blog?.user?.name}</p>
-          <button onClick={remove}>remove</button>
+          {(user && blog.user.id === user.id &&
+            <button onClick={remove}>remove</button>  
+          )}
         </div>
       )}
     </div>

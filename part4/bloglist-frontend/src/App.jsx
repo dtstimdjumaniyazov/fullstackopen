@@ -120,7 +120,7 @@ const App = () => {
     blogFormRef.current.toggleVisibility()
     try {
       const createdBlog = await blogService.create(newBlog)
-      setBlogs(blogs.concat(createdBlog))
+      setBlogs(blogs.concat({...createdBlog, user: { name: user.name, id: createdBlog.user }}))
       setMessage(`a new blog ${newBlog.title} by ${JSON.parse(localStorage.getItem('loggedBlogappUser')).username} added`)
       setTimeout(() => {
         setMessage(null)
@@ -132,7 +132,7 @@ const App = () => {
       }, 5000)
       console.error('Error in handleCreate', error)
     }
-
+    
   }
 
   const handleLike = async (id, blog) => {
@@ -186,7 +186,9 @@ const App = () => {
           key={sortedBlog.id}
           blog={sortedBlog}
           addLike={() => handleLike(sortedBlog.id, sortedBlog)}
-          remove={() => handleRemove(sortedBlog.id)}/>
+          remove={() => handleRemove(sortedBlog.id)}
+          user={user}
+        />
       )}
     </div>
   )
