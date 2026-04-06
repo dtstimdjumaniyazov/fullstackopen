@@ -1,125 +1,69 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-import { loginWith, createBlog, expandAndLikeBlog, expandBlogAndDelete } from '../helper'
+import { loginWith, createBlog } from '../helper'
 
-const newUser = {
+const testUser = {
     username: 'e2eTest',
     name: 'e2e Test User',
     password: 'e2eTest'
 }
 
-const anotherUser = {
-    username: 'anotherOne',
-    name: 'anotherOne',
-    password: 'anotherOne'
-}
-
-const newBlog = {
-    title: 'testTitle',
-    author: 'testAuthor',
-    url: 'testURL.com'
+const testBlog = {
+    title: 'Test Blog Title',
+    author: 'Test Author',
+    url: 'testurl.com'
 }
 
 describe('Blog app', () => {
-  beforeEach(async ({ page, request }) => {
-    await request.post('http://localhost:3001/api/testing/reset')
-    await request.post('http://localhost:3001/api/users', {
-        data: newUser
-    })
-    await page.goto('http://localhost:5173')
-  })
-
-  test('Login form is shown', async ({ page }) => {
-    await page.getByRole('textbox', {name: 'username'}).waitFor()
-    await page.getByRole('textbox', {name: 'password'}).waitFor()
-  })
-
-  describe('login', () => {
-    test('succeeds with correct credentials', async ({ page }) => {
-      await loginWith(page, newUser.username, newUser.password)
+    beforeEach(async ({ page, request }) => {
+        await request.post('http://localhost:3001/api/testing/reset')
+        await request.post('http://localhost:3001/api/users', { data: testUser })
+        await page.goto('http://localhost:5173/login')
     })
 
-    test('fails with wrong credentials', async ({ page }) => {
-      await loginWith(page, 'incorrectUsername', 'Password')
-      await page.waitForSelector('div[class*="error"]', {timeout: 2000})
+    test('login succeeds with correct credentials', async ({ page }) => {
+        await loginWith(page, testUser.username, testUser.password)
+        await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
     })
-  })
 
-    describe('When logged in', () => {
+    test('login fails with wrong credentials', async ({ page }) => {
+        await loginWith(page, 'wronguser', 'wrongpassword')
+        await expect(page.locator('.error')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible()
+    })
+
+    describe('when logged in', () => {
         beforeEach(async ({ page }) => {
-            await loginWith(page, newUser.username, newUser.password)
+            await loginWith(page, testUser.username, testUser.password)
+            console.log('Logged in successfully')
         })
 
-        test('a new blog can be created', async ({ page }) => {
-            await createBlog(page, newBlog.title, newBlog.author, newBlog.url)
-            console.log(`${newUser.username}`)
-            await page.waitForTimeout(1000)
-            expect(page.getByText(`a new blog ${newBlog.title} by ${newUser.username} added`)).toBeVisible()
-        })
-    })
-
-    describe('Manipulations with Blogs', () => {
-        beforeEach(async ({ page }) => {
-            await loginWith(page, newUser.username, newUser.password)
-            await createBlog(page,newBlog.title, newBlog.author, newBlog.url)
+        test('a logged-in user can create a blog', async ({ page }) => {
+            await createBlog(page, testBlog.title, testBlog.author, testBlog.url)
+            await expect(page.locator('div[class*="error"]')).toContainText(`a new blog ${testBlog.title}`)
+            await expect(page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`)).toBeVisible()
         })
 
-        // ex. 5.20 
-        test('Created blog could be liked', async ({ page }) => {
-            await expandAndLikeBlog(page, newBlog.title, 2)
-            const likeElement = await page.locator(`div[class*="blog"]:has(span:has-text("${newBlog.title}")) p:has-text("likes")`).textContent()
-            expect(likeElement).toContain('likes 2')
-        })
-
-        // ex. 5.21
-        test('Created blog could be deleted by the user who created it', async ({ page }) => {
-            await expandBlogAndDelete(page, newBlog.title)
-            const removedBlog = page.locator(`div[class*="blog"]:has(span:has-text("${newBlog.title}"))`)
-            await expect(removedBlog).not.toBeVisible()
-        })
-    })
-
-    // ex. 5.22
-    describe('Ensure that another user cant see Delete button', async () => {
-        beforeEach(async ({ page, request }) => {
-            await request.post('http://localhost:3001/api/users', {
-                data: anotherUser
+        describe('when a blog exists', () => {
+            beforeEach(async ({ page }) => {
+                await createBlog(page, testBlog.title, testBlog.author, testBlog.url)
+                await page.waitForURL('**/blogs')
             })
-            await loginWith(page, newUser.username, newUser.password)
-            await createBlog(page,newBlog.title, newBlog.author, newBlog.url)
-            await page.getByRole('button', {name: 'logout'}).click()
-            await loginWith(page, anotherUser.username, anotherUser.password)
-        })
-        test('check remove button', async ({page}) => {
-            await page.locator(`div[class*="blog"]:has(span:has-text("${newBlog.title}")) button:has-text("view")`).click()
-            const removeButton = page.locator('button:has-text("Remove")')
-            await page.waitForTimeout(1000)
-            await expect(removeButton).not.toBeVisible()
-        })
-    })
 
-    describe('Blogs are arranged in the order according to the likes', async () => {
-        beforeEach(async ({ page }) => {
-            await loginWith(page, newUser.username, newUser.password)
-            await createBlog(page, newBlog.title, newBlog.author, newBlog.url)
-            await page.waitForTimeout(1000)
-            await createBlog(page, 'Blog2', 'author2', 'url2')
-            await page.waitForTimeout(1000)
-            await createBlog(page, 'Blog3', 'author3', 'url3')
-            await page.waitForTimeout(1000)
+            test('a logged-in user can like a blog', async ({ page }) => {
+                await page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`).click()
+                const likeButton = page.locator('button:has-text("like")')
+                await likeButton.waitFor()
+                await likeButton.click()
+                await expect(page.locator('p:has-text("likes")')).toContainText('likes 1')
+            })
 
-            await expandAndLikeBlog(page, 'Blog2', 1)
-            await page.waitForTimeout(1000)
-            await expandAndLikeBlog(page, 'Blog3', 3)
-            await page.waitForTimeout(1000)
-            await expandAndLikeBlog(page, newBlog.title, 5)
-            await page.waitForTimeout(1000)
-        })
-
-        test('blogs are sorted by Likes', async ({ page }) => {
-            const blog = page.locator('div[class*="blog"] span')
-            await expect(blog.nth(0)).toContainText(newBlog.title)
-            await expect(blog.nth(1)).toContainText('Blog3')
-            await expect(blog.nth(2)).toContainText('Blog2')
+            test('a logged-in user can delete a blog they created', async ({ page }) => {
+                await page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`).click()
+                page.on('dialog', dialog => dialog.accept())
+                await page.locator('button:has-text("remove")').click()
+                await page.waitForURL('**/blogs')
+                await expect(page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`)).not.toBeVisible()
+            })
         })
     })
 })

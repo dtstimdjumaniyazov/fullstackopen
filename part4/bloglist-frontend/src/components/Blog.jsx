@@ -1,14 +1,15 @@
-import { useState } from 'react'
+// import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
-const Blog = ({ blog, addLike, remove, user }) => {
-  const [visible, setVisible] = useState(false)
+const Blog = ({ blog }) => {
+  // const [visible, setVisible] = useState(false)
   
   return (
     <div className="blog">
       <span className="blog-title-author">
-        {blog.title} {blog.author}
+        <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
       </span>
-      <button onClick={() => setVisible(!visible)}>
+      {/* <button onClick={() => setVisible(!visible)}>
         {visible ? 'hide' : 'view'}
       </button>
       {visible && (
@@ -23,7 +24,7 @@ const Blog = ({ blog, addLike, remove, user }) => {
             <button onClick={remove}>remove</button>  
           )}
         </div>
-      )}
+      )} */}
     </div>
   )
 }

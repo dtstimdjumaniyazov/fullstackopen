@@ -1,49 +1,54 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import Blog from './Blog'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import BlogDetails from './BlogDetails'
 
 const blog = {
+  id: '123',
   title: 'React patterns',
   author: 'Michael Chan',
   url: 'https://reactpatterns.com/',
   likes: 7,
-  user: { name: 'Test User' }
+  user: { id: 'user1', name: 'Test User' }
 }
 
-// 5.13
-test('renders title and author, but not url or likes by default', () => {
-  render(<Blog blog={blog} addLike={() => {}} remove={() => {}} />)
+const renderBlogDetails = (user = null) => {
+  return render(
+    <MemoryRouter initialEntries={['/blogs/123']}>
+      <Routes>
+        <Route path='/blogs/:id' element={
+          <BlogDetails blogs={[blog]} addLike={() => {}} remove={() => {}} user={user} />
+        } />
+      </Routes>
+    </MemoryRouter>
+  )
+}
+
+// 5.28 - unauthenticated users see blog info but no buttons
+test('blog info and likes shown to unauthenticated users, no buttons displayed', () => {
+  renderBlogDetails(null)
 
   expect(screen.getByText(/React patterns/)).toBeDefined()
-  expect(screen.getByText(/Michael Chan/)).toBeDefined()
-
-  expect(screen.queryByText('https://reactpatterns.com/')).toBeNull()
-  expect(screen.queryByText(/likes 7/)).toBeNull()
-})
-
-// 5.14
-test('url and likes are shown when the view button is clicked', async () => {
-  const user = userEvent.setup()
-  render(<Blog blog={blog} addLike={() => {}} remove={() => {}} />)
-
-  const button = screen.getByText('view')
-  await user.click(button)
-
   expect(screen.getByText('https://reactpatterns.com/')).toBeDefined()
   expect(screen.getByText(/likes 7/)).toBeDefined()
+
+  expect(screen.queryByText('like')).toBeNull()
+  expect(screen.queryByText('remove')).toBeNull()
 })
 
-// 5.15
-test('like button clicked twice calls the event handler twice', async () => {
-  const mockAddLike = vi.fn()
-  const user = userEvent.setup()
-  render(<Blog blog={blog} addLike={mockAddLike} remove={() => {}} />)
+// 5.28 - authenticated non-creator sees like button only
+test('authenticated non-creator sees like button but not remove button', () => {
+  const otherUser = { id: 'user2', name: 'Other User' }
+  renderBlogDetails(otherUser)
 
-  await user.click(screen.getByText('view'))
+  expect(screen.getByText('like')).toBeDefined()
+  expect(screen.queryByText('remove')).toBeNull()
+})
 
-  const likeButton = screen.getByText('like')
-  await user.click(likeButton)
-  await user.click(likeButton)
+// 5.28 - creator sees both like and remove buttons
+test('blog creator sees both like and remove buttons', () => {
+  const creator = { id: 'user1', name: 'Test User' }
+  renderBlogDetails(creator)
 
-  expect(mockAddLike.mock.calls).toHaveLength(2)
+  expect(screen.getByText('like')).toBeDefined()
+  expect(screen.getByText('remove')).toBeDefined()
 })

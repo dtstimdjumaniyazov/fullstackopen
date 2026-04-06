@@ -1,24 +1,20 @@
-import { useState, useEffect, useRef } from 'react'
-import Blog from './components/Blog'
+import { useState, useEffect } from 'react'
+import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import blogService from './services/blogs'
-import loginService from './services/login'
 import Notification from './components/Notification'
-import Togglable from './components/Togglable'
 import NewBlogForm from './components/NewBlogForm'
+import BlogList from './components/BlogList'
+import LoginForm from './components/LoginForm'
+import BlogDetails from './components/BlogDetails'
 
 const App = () => {
+  const navigate = useNavigate()
   const [blogs, setBlogs] = useState([])
 
-  //login-logout
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
 
-  // notification
   const [message, setMessage] = useState(null)
 
-  //useRef hook
-  const blogFormRef = useRef()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -35,35 +31,13 @@ const App = () => {
     }
   }, [])
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
-
-    try {
-      const user = await loginService.login({ username, password })
-
-      window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
-      )
-
-      blogService.setToken(user.token)
-      setUser(user)
-      setUsername('')
-      setPassword('')
-    } catch (error) {
-      setMessage(error.response.data.error)
-      setTimeout(() => {
-        setMessage(null)
-      }, 5000)
-      console.error('Error in handleLogin', error)
-    }
-  }
-
   const handleLogout = (event) => {
     event.preventDefault()
     console.log('I was clicked')
     try {
       window.localStorage.removeItem('loggedBlogappUser')
       setUser(null)
+      navigate('/blogs')
     } catch (error) {
       setMessage(error.response.data.error)
       setTimeout(() => {
@@ -73,51 +47,7 @@ const App = () => {
     }
   }
 
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        <label>
-          username
-          <input
-            type='text'
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          password
-          <input
-            type='password'
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </label>
-      </div>
-      <button type='submit'>login</button>
-    </form>
-  )
-
-  const login = () =>
-  {if (user === null) {
-    return (
-      <div>
-        <h2>Log in to application</h2>
-        <div>{loginForm()}</div>
-      </div>
-    )
-  } else if (user) {
-    return (
-      <div>
-        <p><strong>{user.username}</strong> logged in</p>
-        <button onClick={handleLogout}>logout</button>
-      </div>
-    )
-  }}
-
   const handleCreate = async (newBlog) => {
-    blogFormRef.current.toggleVisibility()
     try {
       const createdBlog = await blogService.create(newBlog)
       setBlogs(blogs.concat({...createdBlog, user: { name: user.name, id: createdBlog.user }}))
@@ -125,6 +55,7 @@ const App = () => {
       setTimeout(() => {
         setMessage(null)
       }, 5000)
+      navigate('/blogs')
     } catch (error) {
       setMessage(error.response.data.error)
       setTimeout(() => {
@@ -165,32 +96,28 @@ const App = () => {
     }
   }
 
-
-  const blogForm = () => (
-    <Togglable buttonLabel='new blog' ref={blogFormRef}>
-      <NewBlogForm createBlog={handleCreate} />
-    </Togglable>
-  )
-
-  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
-  // console.log('sortedBlogs', sortedBlogs)
-
   return (
-    <div>
-      <h2>blogs</h2>
-      <Notification message={message}/>
-      {login()}
-      {user && blogForm()}
-      {user && sortedBlogs.map(sortedBlog =>
-        <Blog
-          key={sortedBlog.id}
-          blog={sortedBlog}
-          addLike={() => handleLike(sortedBlog.id, sortedBlog)}
-          remove={() => handleRemove(sortedBlog.id)}
-          user={user}
-        />
-      )}
-    </div>
+    <>
+      <div>
+        <Notification message={message}/>
+      </div>
+      <div>
+        <Link style={{margin: '5px'}} to="/blogs">Blogs</Link>
+        <Link style={{margin: '5px'}} to='/create-blog'>new blog</Link>
+        {
+          user 
+            ? <button onClick={handleLogout}>Logout</button>
+            : <Link style={{margin: '5px'}} to="/login">Login</Link>
+        }
+      </div>
+
+      <Routes>
+        <Route style={{margin: '5px'}} path='/blogs' element={<BlogList blogs={blogs} user={user}/>} />
+        <Route path='/blogs/:id' element={<BlogDetails blogs={blogs} addLike={handleLike} remove={handleRemove} user={user} />}/>
+        <Route path='/create-blog' element={<NewBlogForm createBlog={handleCreate} />} />
+        <Route style={{margin: '5px'}} path='/login' element={<LoginForm setMessage={setMessage} setUser={setUser} />} />
+      </Routes>
+    </>
   )
 }
 
