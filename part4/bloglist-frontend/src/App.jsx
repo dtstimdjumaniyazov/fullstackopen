@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { Container } from '@mui/material'
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
+import Button from '@mui/material/Button'
 import blogService from './services/blogs'
 import Notification from './components/Notification'
 import NewBlogForm from './components/NewBlogForm'
@@ -14,6 +18,7 @@ const App = () => {
   const [user, setUser] = useState(null)
 
   const [message, setMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
 
   useEffect(() => {
@@ -37,11 +42,11 @@ const App = () => {
     try {
       window.localStorage.removeItem('loggedBlogappUser')
       setUser(null)
-      navigate('/blogs')
+      navigate('/')
     } catch (error) {
-      setMessage(error.response.data.error)
+      setErrorMessage(error.response.data.error)
       setTimeout(() => {
-        setMessage(null)
+        setErrorMessage(null)
       }, 5000)
       console.error('Error logout', error)
     }
@@ -55,11 +60,11 @@ const App = () => {
       setTimeout(() => {
         setMessage(null)
       }, 5000)
-      navigate('/blogs')
+      navigate('/')
     } catch (error) {
-      setMessage(error.response.data.error)
+      setErrorMessage(error.response.data.error)
       setTimeout(() => {
-        setMessage(null)
+        setErrorMessage(null)
       }, 5000)
       console.error('Error in handleCreate', error)
     }
@@ -88,36 +93,43 @@ const App = () => {
         setBlogs(blogs.filter(blog => blog.id !== id))
       }
     } catch (error) {
-      setMessage(error.response.data.error)
+      setErrorMessage(error.response.data.error)
       setTimeout(() => {
-        setMessage(null)
+        setErrorMessage(null)
       }, 5000)
       console.error('Error removing blog', error)
     }
   }
 
   return (
-    <>
+    <Container>
+      <AppBar position="static">
+        <Toolbar position="static">
+          <Button color='inherit'><Link style={{margin: '5px'}} to="/">Blogs</Link></Button>
+          <Button color='inherit'><Link style={{margin: '5px'}} to='/create-blog'>new blog</Link></Button>
+          {
+            user 
+              ? <Button color='inherit' onClick={handleLogout}>Logout</Button>
+              : <Button color='inherit'><Link style={{margin: '5px'}} to="/login">Login</Link></Button>
+          }
+        </Toolbar>
+      </AppBar>
+
       <div>
-        <Notification message={message}/>
+        <Notification message={message} severity="success"/>
       </div>
+
       <div>
-        <Link style={{margin: '5px'}} to="/blogs">Blogs</Link>
-        <Link style={{margin: '5px'}} to='/create-blog'>new blog</Link>
-        {
-          user 
-            ? <button onClick={handleLogout}>Logout</button>
-            : <Link style={{margin: '5px'}} to="/login">Login</Link>
-        }
+        <Notification message={errorMessage} severity="error"/>
       </div>
 
       <Routes>
-        <Route style={{margin: '5px'}} path='/blogs' element={<BlogList blogs={blogs} user={user}/>} />
+        <Route style={{margin: '5px'}} path='/' element={<BlogList blogs={blogs} user={user}/>} />
         <Route path='/blogs/:id' element={<BlogDetails blogs={blogs} addLike={handleLike} remove={handleRemove} user={user} />}/>
         <Route path='/create-blog' element={<NewBlogForm createBlog={handleCreate} />} />
-        <Route style={{margin: '5px'}} path='/login' element={<LoginForm setMessage={setMessage} setUser={setUser} />} />
+        <Route style={{margin: '5px'}} path='/login' element={<LoginForm message={setErrorMessage} setUser={setUser} />} />
       </Routes>
-    </>
+    </Container>
   )
 }
 

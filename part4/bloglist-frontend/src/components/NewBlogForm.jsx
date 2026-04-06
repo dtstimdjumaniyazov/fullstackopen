@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TextField, Button } from '@mui/material'
 
 const NewBlogForm = ({ createBlog }) => {
   const [newBlog, setNewBlog] = useState({
@@ -18,36 +19,31 @@ const NewBlogForm = ({ createBlog }) => {
       <h3>Create a new blog</h3>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>
-                    title
-            <input
-              type='text'
-              value={newBlog.title}
-              onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
-            />
-          </label>
+          <TextField 
+            label="title"
+            sx={{ margin: 1, width: '50%'}}
+            value={newBlog.title}
+            onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
+            
+          />
         </div>
         <div>
-          <label>
-                    author
-            <input
-              type='text'
-              value={newBlog.author}
-              onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
-            />
-          </label>
+          <TextField 
+            label="author"
+            sx={{ margin: 1, width: '50%'}}
+            value={newBlog.author}
+            onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
+          />
         </div>
         <div>
-          <label>
-                    URL
-            <input
-              type='text'
-              value={newBlog.url}
-              onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
-            />
-          </label>
+          <TextField 
+            label="URL"
+            sx={{ margin: 1, width: '50%'}}
+            value={newBlog.url}
+            onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
+          />
         </div>
-        <button type='submit'>create</button>
+        <Button type='submit' variant='contained' sx={{ mx: 1}}>create</Button>
       </form>
     </>
   )

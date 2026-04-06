@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from 'react-router-dom'
+import { TextField, Button } from '@mui/material'
 import loginService from '../services/login'
 import blogService from '../services/blogs'
 
-const LoginForm = ({ setMessage, setUser }) => {
+const LoginForm = ({ message, setUser }) => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
@@ -23,42 +24,41 @@ const LoginForm = ({ setMessage, setUser }) => {
           setUser(user)
           setUsername('')
           setPassword('')
-          navigate('/blogs')
+          navigate('/')
         } catch (error) {
-          setMessage(error.response.data.error)
+          message(error.response.data.error)
           setTimeout(() => {
-            setMessage(null)
+            message(null)
           }, 5000)
           console.error('Error in handleLogin', error)
         }
     }
 
     return (
-        <>
+        <div style={{marginTop: '10px'}}>
             <form onSubmit={handleLogin}>
                 <div>
-                    <label>
-                    username
-                    <input
-                        type='text'
+                    <TextField
+                        label="Username"
+                        variant='standard'
                         value={username}
                         onChange={({ target }) => setUsername(target.value)}
                     />
-                    </label>
                 </div>
-                <div>
-                    <label>
-                    password
-                    <input
-                        type='password'
+                <div style={{marginTop: '10px'}}>
+                    <TextField
+                        label="password"
+                        variant='standard'
+                        type="password"
                         value={password}
                         onChange={({ target }) => setPassword(target.value)}
                     />
-                    </label>
                 </div>
-                <button type='submit'>login</button>
+                <div>
+                    <Button type='submit' variant="contained" style={{marginTop: '10px'}}>login</Button>
+                </div>    
             </form>
-        </>
+        </div>
     )
 }
 

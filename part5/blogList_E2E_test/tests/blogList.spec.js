@@ -27,7 +27,7 @@ describe('Blog app', () => {
 
     test('login fails with wrong credentials', async ({ page }) => {
         await loginWith(page, 'wronguser', 'wrongpassword')
-        await expect(page.locator('.error')).toBeVisible()
+        await expect(page.locator('[role="alert"]')).toBeVisible()
         await expect(page.getByRole('button', { name: 'Logout' })).not.toBeVisible()
     })
 
@@ -39,14 +39,14 @@ describe('Blog app', () => {
 
         test('a logged-in user can create a blog', async ({ page }) => {
             await createBlog(page, testBlog.title, testBlog.author, testBlog.url)
-            await expect(page.locator('div[class*="error"]')).toContainText(`a new blog ${testBlog.title}`)
+            await expect(page.locator('[role="alert"]')).toContainText(`a new blog ${testBlog.title}`)
             await expect(page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`)).toBeVisible()
         })
 
         describe('when a blog exists', () => {
             beforeEach(async ({ page }) => {
                 await createBlog(page, testBlog.title, testBlog.author, testBlog.url)
-                await page.waitForURL('**/blogs')
+                await page.waitForURL('**/')
             })
 
             test('a logged-in user can like a blog', async ({ page }) => {
@@ -54,14 +54,14 @@ describe('Blog app', () => {
                 const likeButton = page.locator('button:has-text("like")')
                 await likeButton.waitFor()
                 await likeButton.click()
-                await expect(page.locator('p:has-text("likes")')).toContainText('likes 1')
+                await expect(page.locator('p:has-text("likes")')).toContainText('1 likes')
             })
 
             test('a logged-in user can delete a blog they created', async ({ page }) => {
                 await page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`).click()
                 page.on('dialog', dialog => dialog.accept())
                 await page.locator('button:has-text("remove")').click()
-                await page.waitForURL('**/blogs')
+                await page.waitForURL('**/')
                 await expect(page.locator(`div[class*="blog"] a:has-text("${testBlog.title}")`)).not.toBeVisible()
             })
         })

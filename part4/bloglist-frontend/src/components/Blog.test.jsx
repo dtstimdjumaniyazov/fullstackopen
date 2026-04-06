@@ -29,7 +29,7 @@ test('blog info and likes shown to unauthenticated users, no buttons displayed',
 
   expect(screen.getByText(/React patterns/)).toBeDefined()
   expect(screen.getByText('https://reactpatterns.com/')).toBeDefined()
-  expect(screen.getByText(/likes 7/)).toBeDefined()
+  expect(screen.getByText(/7\s*likes/)).toBeDefined()
 
   expect(screen.queryByText('like')).toBeNull()
   expect(screen.queryByText('remove')).toBeNull()
