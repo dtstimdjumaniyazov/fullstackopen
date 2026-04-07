@@ -11,7 +11,7 @@ const BlogDetails = ({ blogs, addLike, remove, user }) => {
     navigate('/')
   }
 
-  if (!blogs) {
+  if (!blog) {
     return (
       <div>Blog not found</div>
     )
