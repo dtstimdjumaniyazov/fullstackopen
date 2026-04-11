@@ -4,6 +4,8 @@ const AnecdoteList = () => {
     const anecdotes = useAnecdotes()
     const { addVotes } = useAnecdoteActions()
 
+    // console.log(anecdotes)
+
     const sortedAnecdotes = anecdotes.toSorted((a, b) => {
         return (b.votes - a.votes)
     })
