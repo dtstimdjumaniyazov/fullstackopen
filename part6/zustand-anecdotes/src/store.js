@@ -18,7 +18,7 @@ import anecdoteService from './services/anecdotes'
 //   votes: 0
 // })
 
-const useAnecdoteStore = create((set, get) => ({
+export const useAnecdoteStore = create((set, get) => ({
   anecdotes: [],
   filter: '',
   actions: {
@@ -63,7 +63,7 @@ export const useAnecdotes = () => {
   return anecdotes
 }
 
-const useNotificationStore = create((set) => ({
+export const useNotificationStore = create((set) => ({
   message: '',
   actions: {
     createNotification: (content, duration = 5000) => {
