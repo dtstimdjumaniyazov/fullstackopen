@@ -1,8 +1,11 @@
 import { useAnecdotes, useAnecdoteActions } from "../store"
+import { useNotificationActions } from '../store'
 
 const AnecdoteList = () => {
     const anecdotes = useAnecdotes()
-    const { addVotes } = useAnecdoteActions()
+    const { addVotes, deleteAnecdote } = useAnecdoteActions()
+    const { addVoteNotification } = useNotificationActions()
+
 
     // console.log(anecdotes)
 
@@ -12,12 +15,26 @@ const AnecdoteList = () => {
 
     return (
         <div>
-            {sortedAnecdotes.map(anecdote => (
+            {sortedAnecdotes?.map(anecdote => (
                 <div key={anecdote.id}>
                     <div>{anecdote.content}</div>
                     <div>
                         has {anecdote.votes}
-                        <button onClick={() => addVotes(anecdote.id)}>vote</button>
+                        <button 
+                            onClick={() => { 
+                                addVotes(anecdote.id)
+                                addVoteNotification(anecdote.content)
+                            }}
+                        >
+                            vote
+                        </button>
+                        {anecdote.votes === 0 && 
+                            <button
+                                onClick={() => deleteAnecdote(anecdote.id)}
+                            >
+                                delete
+                            </button>
+                        }
                     </div>
 
                 </div>
