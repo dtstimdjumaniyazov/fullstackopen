@@ -10,7 +10,10 @@ export const getAnecdotes = async () => {
 }
 
 export const createAnecdote = async (newAnecdote) => {
-    
+    if (!newAnecdote.content || newAnecdote.content.length < 5) {
+        throw new Error('Anecdote content should be at least 5 characters long')
+    }
+
     const options = {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
