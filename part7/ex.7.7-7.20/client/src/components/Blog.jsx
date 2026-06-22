@@ -1,13 +1,15 @@
 // import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
 const Blog = ({ blog }) => {
   // const [visible, setVisible] = useState(false)
-  
+
   return (
     <div className="blog">
       <span className="blog-title-author">
-        <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+        <Link to={`/blogs/${blog.id}`}>
+          {blog.title} {blog.author}
+        </Link>
       </span>
       {/* <button onClick={() => setVisible(!visible)}>
         {visible ? 'hide' : 'view'}
@@ -26,7 +28,7 @@ const Blog = ({ blog }) => {
         </div>
       )} */}
     </div>
-  )
-}
+  );
+};
 
-export default Blog
+export default Blog;
