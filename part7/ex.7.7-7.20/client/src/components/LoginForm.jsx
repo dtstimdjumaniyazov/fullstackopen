@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { TextField, Button } from "@mui/material";
 import loginService from "../services/login";
 import blogService from "../services/blogs";
+import { useNotificationActions } from "../store/store";
 
-const LoginForm = ({ message, setUser }) => {
+const LoginForm = ({ setUser }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  const { errorNotification } = useNotificationActions()
 
   const navigate = useNavigate();
 
@@ -24,9 +27,9 @@ const LoginForm = ({ message, setUser }) => {
       setPassword("");
       navigate("/");
     } catch (error) {
-      message(error.response.data.error);
+      errorNotification(error.response.data.error);
       setTimeout(() => {
-        message(null);
+        errorNotification(null);
       }, 5000);
       console.error("Error in handleLogin", error);
     }

@@ -12,15 +12,16 @@ import LoginForm from "./components/LoginForm";
 import BlogDetails from "./components/BlogDetails";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageNotFound from "./components/PageNotFound";
+import { useNotificationActions } from "./store/store";
 
 const App = () => {
-  const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
-
   const [user, setUser] = useState(null);
 
-  const [message, setMessage] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const navigate = useNavigate();
+
+  const { createNotification, errorNotification } = useNotificationActions()
+
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -43,10 +44,7 @@ const App = () => {
       setUser(null);
       navigate("/");
     } catch (error) {
-      setErrorMessage(error.response.data.error);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      errorNotification(error.response.data.error);
       console.error("Error logout", error);
     }
   };
@@ -60,18 +58,10 @@ const App = () => {
           user: { name: user.name, id: createdBlog.user },
         }),
       );
-      setMessage(
-        `a new blog ${newBlog.title} by ${JSON.parse(localStorage.getItem("loggedBlogappUser")).username} added`,
-      );
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
+      createNotification(newBlog.title)
       navigate("/");
     } catch (error) {
-      setErrorMessage(error.response.data.error);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      errorNotification(error.response.data.error);
       console.error("Error in handleCreate", error);
     }
   };
@@ -100,10 +90,7 @@ const App = () => {
         setBlogs(blogs.filter((blog) => blog.id !== id));
       }
     } catch (error) {
-      setErrorMessage(error.response.data.error);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      errorNotification(error.response.data.error)
       console.error("Error removing blog", error);
     }
   };
@@ -137,11 +124,7 @@ const App = () => {
       </AppBar>
 
       <div>
-        <Notification message={message} severity="success" />
-      </div>
-
-      <div>
-        <Notification message={errorMessage} severity="error" />
+        <Notification/>
       </div>
 
       <Routes>
@@ -180,7 +163,7 @@ const App = () => {
           path="/login"
           element={
             <ErrorBoundary>
-              <LoginForm message={setErrorMessage} setUser={setUser} />
+              <LoginForm setUser={setUser} />
             </ErrorBoundary>
           }
         />
