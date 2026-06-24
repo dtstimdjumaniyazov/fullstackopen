@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { TextField, Button } from "@mui/material";
+import { useBlogActions } from "../store/store";
+import { useNavigate } from "react-router-dom";
+import { useField } from "./hooks";
 
-const NewBlogForm = ({ createBlog }) => {
-  const [newBlog, setNewBlog] = useState({
-    title: "",
-    author: "",
-    url: "",
-  });
+const NewBlogForm = () => {
+  const navigate = useNavigate()
+  const title = useField('text')
+  const author = useField('text')
+  const url = useField('text')
 
+  const { addBlog } = useBlogActions()
+  
   const handleSubmit = (event) => {
     event.preventDefault();
-    createBlog(newBlog);
-    setNewBlog({
-      title: "",
-      author: "",
-      url: "",
-    });
+    addBlog({
+      title: title.value, 
+      author: author.value, 
+      url: url.value
+    })
+    event.target.reset()
+    navigate("/")
   };
 
   return (
@@ -26,30 +31,24 @@ const NewBlogForm = ({ createBlog }) => {
           <TextField
             label="title"
             sx={{ margin: 1, width: "50%" }}
-            value={newBlog.title}
-            onChange={({ target }) =>
-              setNewBlog({ ...newBlog, title: target.value })
-            }
+            name="title"
+            {...title}
           />
         </div>
         <div>
           <TextField
             label="author"
             sx={{ margin: 1, width: "50%" }}
-            value={newBlog.author}
-            onChange={({ target }) =>
-              setNewBlog({ ...newBlog, author: target.value })
-            }
+            name="author"
+            {...author}
           />
         </div>
         <div>
           <TextField
             label="URL"
             sx={{ margin: 1, width: "50%" }}
-            value={newBlog.url}
-            onChange={({ target }) =>
-              setNewBlog({ ...newBlog, url: target.value })
-            }
+            name="url"
+            {...url}
           />
         </div>
         <Button type="submit" variant="contained" sx={{ mx: 1 }}>

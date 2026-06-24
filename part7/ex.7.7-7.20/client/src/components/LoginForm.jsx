@@ -1,30 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotificationActions, useUserActions } from "../store/store";
 import { TextField, Button } from "@mui/material";
-import loginService from "../services/login";
-import blogService from "../services/blogs";
-import { useNotificationActions } from "../store/store";
+import { useField } from "./hooks";
 
-const LoginForm = ({ setUser }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
 
+const LoginForm = () => {
+  const { login } = useUserActions()
   const { errorNotification } = useNotificationActions()
-
+  const username = useField('text')
+  const password = useField('password')
   const navigate = useNavigate();
 
   const handleLogin = async (event) => {
-    event.preventDefault();
-
+    event.preventDefault()
+    
     try {
-      const user = await loginService.login({ username, password });
-
-      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
-
-      blogService.setToken(user.token);
-      setUser(user);
-      setUsername("");
-      setPassword("");
+      await login(username.value, password.value)
       navigate("/");
     } catch (error) {
       errorNotification(error.response.data.error);
@@ -41,18 +33,18 @@ const LoginForm = ({ setUser }) => {
         <div>
           <TextField
             label="Username"
+            name="username"
             variant="standard"
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
+            {...username}
           />
         </div>
         <div style={{ marginTop: "10px" }}>
           <TextField
             label="password"
+            name="password"
             variant="standard"
             type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
+            {...password}
           />
         </div>
         <div>

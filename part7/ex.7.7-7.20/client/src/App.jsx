@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { Container } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import blogService from "./services/blogs";
 import Notification from "./components/Notification";
 import NewBlogForm from "./components/NewBlogForm";
 import BlogList from "./components/BlogList";
@@ -12,88 +11,43 @@ import LoginForm from "./components/LoginForm";
 import BlogDetails from "./components/BlogDetails";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageNotFound from "./components/PageNotFound";
-import { useNotificationActions } from "./store/store";
+import { useBlogActions, useBlogsStore, useNotificationActions, useUserActions, useUsersStore } from "./store/store";
+import UserView from "./components/UserView";
+import UserDetailView from "./components/UserDetailsView";
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
-  const [user, setUser] = useState(null);
-
   const navigate = useNavigate();
 
   const { createNotification, errorNotification } = useNotificationActions()
-
+  const { initialize, initializeUsers } = useBlogActions()
+  const blogs = useBlogsStore()
+  const user = useUsersStore()
+  const { initializeUser, logout } = useUserActions()
+  
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
-  }, []);
+    initialize()
+  }, [initialize]);
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON);
-      setUser(user);
-      blogService.setToken(user.token);
-    }
-  }, []);
+    initializeUser()
+  }, [initializeUser]);
+
+  useEffect(() => {
+    initializeUsers()
+  }, [initializeUsers])
+
 
   const handleLogout = (event) => {
     event.preventDefault();
-    console.log("I was clicked");
     try {
-      window.localStorage.removeItem("loggedBlogappUser");
-      setUser(null);
+      logout()
       navigate("/");
     } catch (error) {
       errorNotification(error.response.data.error);
       console.error("Error logout", error);
     }
-  };
-
-  const handleCreate = async (newBlog) => {
-    try {
-      const createdBlog = await blogService.create(newBlog);
-      setBlogs(
-        blogs.concat({
-          ...createdBlog,
-          user: { name: user.name, id: createdBlog.user },
-        }),
-      );
-      createNotification(newBlog.title)
-      navigate("/");
-    } catch (error) {
-      errorNotification(error.response.data.error);
-      console.error("Error in handleCreate", error);
-    }
-  };
-
-  const handleLike = async (id, blog) => {
-    try {
-      const updatedBlog = await blogService.update(id, {
-        ...blog,
-        user: blog.user.id,
-        likes: blog.likes + 1,
-      });
-      setBlogs(
-        blogs.map((blog) => {
-          return blog.id === id ? { ...blog, likes: updatedBlog.likes } : blog;
-        }),
-      );
-    } catch (error) {
-      console.error("Error update likes", error);
-    }
-  };
-
-  const handleRemove = async (id) => {
-    try {
-      if (window.confirm("Are you sure you want to remove this blog?")) {
-        await blogService.remove(id);
-        setBlogs(blogs.filter((blog) => blog.id !== id));
-      }
-    } catch (error) {
-      errorNotification(error.response.data.error)
-      console.error("Error removing blog", error);
-    }
-  };
+  }
 
   return (
     <Container>
@@ -108,6 +62,11 @@ const App = () => {
             <Link style={{ margin: "5px" }} to="/create-blog">
               new blog
             </Link>
+          </Button>
+          <Button color="inherit">
+              <Link style={{ margin: "5px" }} to="/users">
+                Users
+              </Link>
           </Button>
           {user ? (
             <Button color="inherit" onClick={handleLogout}>
@@ -133,7 +92,7 @@ const App = () => {
           path="/"
           element={
             <ErrorBoundary>
-              <BlogList blogs={blogs} user={user} />
+              <BlogList user={user} />
             </ErrorBoundary>
           }
         />
@@ -141,12 +100,7 @@ const App = () => {
           path="/blogs/:id"
           element={
             <ErrorBoundary>
-              <BlogDetails
-                blogs={blogs}
-                addLike={handleLike}
-                remove={handleRemove}
-                user={user}
-              />
+              <BlogDetails user={user}/>
             </ErrorBoundary>
           }
         />
@@ -154,7 +108,25 @@ const App = () => {
           path="/create-blog"
           element={
             <ErrorBoundary>
-              <NewBlogForm createBlog={handleCreate} />
+              <NewBlogForm />
+            </ErrorBoundary>
+          }
+        />
+        <Route 
+          style={{ margin: "5px" }}
+          path="/users"
+          element={
+            <ErrorBoundary>
+              <UserView />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          style={{ margin: "5px" }}
+          path="/users/:id"
+          element={
+            <ErrorBoundary>
+              <UserDetailView />
             </ErrorBoundary>
           }
         />
@@ -163,7 +135,7 @@ const App = () => {
           path="/login"
           element={
             <ErrorBoundary>
-              <LoginForm setUser={setUser} />
+              <LoginForm />
             </ErrorBoundary>
           }
         />

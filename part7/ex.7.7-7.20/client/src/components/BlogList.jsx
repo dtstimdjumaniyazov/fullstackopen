@@ -1,6 +1,9 @@
+import { useBlogsStore } from "../store/store";
 import Blog from "./Blog";
 
-const BlogList = ({ blogs, user }) => {
+const BlogList = ({ user }) => {
+  const blogs = useBlogsStore()
+  
   const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes);
 
   return (
